@@ -1,0 +1,31 @@
+vi:
+  redmine_app_notifications:
+    notifications: "Thông báo"
+    menu_caption: "Thông báo"
+    unread: "chưa đọc"
+    mark_all_read: "Đánh dấu đã đọc tất cả"
+    mark_read: "Đánh dấu đã đọc"
+    marked_read: "Đã đánh dấu thông báo là đã đọc."
+    marked_all_read: "Đã đánh dấu tất cả thông báo là đã đọc."
+    no_notifications: "Chưa có thông báo."
+    my_account:
+      enable: "Thông báo trong ứng dụng"
+      enable_info: "Hiển thị hoạt động issue trong menu Thông báo trong ứng dụng."
+    settings:
+      events: "Sự kiện thông báo"
+      events_info: "Chọn sự kiện issue nào tạo thông báo trong ứng dụng. Mỗi tùy chọn độc lập với nhau."
+      email: "Email dự phòng"
+      enable_email_fallback: "Gửi email cho thông báo chưa đọc sau 24 giờ"
+      enable_email_fallback_info: "Gửi email tổng hợp cho các thông báo còn chưa đọc quá 24 giờ."
+      enable_email_fallback_advanced: "Nâng cao: lên lịch rake redmine:app_notifications:email_fallback (cron) trên máy chủ Redmine."
+      issue_added: "Issue được tạo"
+      issue_updated: "Thay đổi issue khác"
+      issue_note_added: "Ghi chú được thêm"
+      issue_status_updated: "Trạng thái thay đổi"
+      issue_assigned_to_updated: "Người được giao thay đổi"
+      issue_priority_updated: "Độ ưu tiên thay đổi"
+    table:
+      notification: "Thông báo"
+      project: "Dự án"
+      date: "Ngày"
+      actions: "Thao tác"

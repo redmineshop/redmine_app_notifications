@@ -1,0 +1,22 @@
+/* Unread badge next to page heading */
+span.app-notifications-badge {
+  margin-left: 0.4em;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 0.75em;
+  font-weight: normal;
+  vertical-align: middle;
+}
+
+/* Highlight unread rows in the notifications list */
+table.list.app-notifications tr.unread td {
+  background-color: #eaf4fb;
+  font-weight: 500;
+}
+
+table.list.app-notifications td.buttons form {
+  display: inline;
+  margin: 0;
+}

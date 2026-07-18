@@ -1,0 +1,65 @@
+<% html_title l('redmine_app_notifications.notifications') %>
+
+<div class="contextual">
+  <% if User.current.admin? %>
+    <%= link_to l(:label_settings),
+                plugin_settings_path(id: 'redmine_app_notifications') %>
+  <% else %>
+    <%= link_to l(:label_my_account), my_account_path %>
+  <% end %>
+</div>
+
+<h2>
+  <%= l('redmine_app_notifications.notifications') %>
+  <% if @unread_count.positive? %>
+    <span class="app-notifications-badge"><%= @unread_count %> <%= l('redmine_app_notifications.unread') %></span>
+  <% end %>
+</h2>
+
+<div class="autoscroll">
+  <p>
+    <%= button_to l('redmine_app_notifications.mark_all_read'),
+                  app_notifications_mark_all_read_path,
+                  method: :post,
+                  class: 'button',
+                  disabled: @unread_count.zero? %>
+  </p>
+
+  <% if @notifications.empty? %>
+    <p class="nodata"><%= l('redmine_app_notifications.no_notifications') %></p>
+  <% else %>
+    <table class="list app-notifications">
+      <thead>
+        <tr>
+          <th><%= l('redmine_app_notifications.table.notification') %></th>
+          <th><%= l('redmine_app_notifications.table.project') %></th>
+          <th><%= l('redmine_app_notifications.table.date') %></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @notifications.each do |notif| %>
+          <tr class="<%= cycle('odd', 'even') %><%= ' unread' unless notif.viewed? %>">
+            <td class="subject">
+              <% if notif.issue %>
+                <%= link_to notif.message_text, issue_path(notif.issue) %>
+              <% else %>
+                <%= notif.message_text %>
+              <% end %>
+            </td>
+            <td class="project"><%= notif.project_name %></td>
+            <td class="created_on"><%= format_time(notif.created_on) if notif.created_on %></td>
+            <td class="buttons">
+              <% unless notif.viewed? %>
+                <%= button_to l('redmine_app_notifications.mark_read'),
+                              app_notification_mark_read_path(notif),
+                              method: :post,
+                              class: 'button-small' %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>

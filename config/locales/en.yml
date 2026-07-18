@@ -1,0 +1,31 @@
+en:
+  redmine_app_notifications:
+    notifications: "Notifications"
+    menu_caption: "Notifications"
+    unread: "unread"
+    mark_all_read: "Mark all as read"
+    mark_read: "Mark as read"
+    marked_read: "Notification marked as read."
+    marked_all_read: "All notifications marked as read."
+    no_notifications: "No notifications yet."
+    my_account:
+      enable: "In-app notifications"
+      enable_info: "Show issue activity in the in-app Notifications menu."
+    settings:
+      events: "Notification events"
+      events_info: "Choose which issue events create in-app notifications. Each option is independent."
+      email: "Email fallback"
+      enable_email_fallback: "Email unread notifications after 24 hours"
+      enable_email_fallback_info: "Sends a digest email for notifications that stay unread for more than 24 hours."
+      enable_email_fallback_advanced: "Advanced: schedule rake redmine:app_notifications:email_fallback (cron) on the Redmine server."
+      issue_added: "Issue added"
+      issue_updated: "Other issue changes"
+      issue_note_added: "Note added"
+      issue_status_updated: "Status changed"
+      issue_assigned_to_updated: "Assignee changed"
+      issue_priority_updated: "Priority changed"
+    table:
+      notification: "Notification"
+      project: "Project"
+      date: "Date"
+      actions: "Actions"
