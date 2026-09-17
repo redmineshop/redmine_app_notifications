@@ -1,8 +1,15 @@
 # Redmine App Notifications
 
-**Free, open source. Download the official package at [redmineshop.com/products/redmine-app-notifications](https://redmineshop.com/products/redmine-app-notifications).**
+[![Community · Free forever](https://img.shields.io/badge/Community-Free%20forever-brightgreen)](https://redmineshop.com/products/redmine-app-notifications)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-In-app notification bell for Redmine — issue activity appears in a top-menu feed so users can catch up without living in email.
+**Last maintained:** 2026-09-17
+
+**Source on GitHub:** [github.com/redmineshop/redmine_app_notifications](https://github.com/redmineshop/redmine_app_notifications)
+
+In-app notification feed for Redmine — issue activity appears in a **Notifications** top-menu entry with an unread count, so users can catch up without living in email.
+
+Community edition is **free forever** — no license key, no phone-home, **no email to clone**.
 
 ## Features
 
@@ -12,66 +19,56 @@ In-app notification bell for Redmine — issue activity appears in a top-menu fe
 - Per-user toggle under **My account**
 - Optional email fallback via cron rake task (admin setting)
 - Admin settings use standard Redmine tabular forms
-- Supports Redmine 5.0.x, 5.1.x, and 6.x
 - No Faye or other external realtime services required
 
+## Requirements
 
-## Compatibility
-
-| Redmine | Ruby | Database | Status |
-|---------|------|----------|--------|
-| 6.x     | 3.2+ | MySQL 8 | Primary QA |
-| 5.1.x   | 3.1+ | MySQL 8 | Targeted |
-| 5.0.x   | 3.0+ | MySQL 8 | Targeted |
+- Redmine 5.0.x or 6.x (`requires_redmine version_or_higher: '5.0'`)
+- Ruby 3.0+
+- MySQL 8 or PostgreSQL
+- A plugin migration (`app_notifications` table)
 
 ## Installation
 
 **Estimated time: 10 minutes.**
 
-### 1. Download
-
-Get the official package (SHA256 checksum included) at:
-**[redmineshop.com/products/redmine-app-notifications](https://redmineshop.com/products/redmine-app-notifications)**
-
-### 2. Extract
+Clone into `plugins/redmine_app_notifications` in your Redmine install (folder name must match):
 
 ```bash
-# From your Redmine root directory
-cd plugins
-tar -xzf redmine_app_notifications-1.0.0.tar.gz
+cd /path/to/redmine/plugins
+git clone https://github.com/redmineshop/redmine_app_notifications.git
+ls redmine_app_notifications/init.rb
 ```
 
-### 3. Run migration
+Do not rename the plugin directory. If you download a GitHub ZIP, rename the unpacked `redmine_app_notifications-main` folder to `redmine_app_notifications`.
+
+### Migrate and restart
 
 ```bash
-# From Redmine root
-bundle exec rake redmine:plugins:migrate RAILS_ENV=production
+cd /path/to/redmine
+RAILS_ENV=production bundle exec rake redmine:plugins:migrate NAME=redmine_app_notifications
+# then restart Redmine (systemd, Puma, or docker compose restart)
 ```
 
-### 4. Restart Redmine
+Docker:
 
 ```bash
-# Example for systemd
-sudo systemctl restart redmine
-
-# Example for Docker
-docker compose restart redmine
+docker exec -e RAILS_ENV=production YOUR_REDMINE_CONTAINER \
+  bundle exec rake redmine:plugins:migrate NAME=redmine_app_notifications
+docker restart YOUR_REDMINE_CONTAINER
 ```
 
-### 5. Enable per user
+No extra gems.
 
-Users can enable or disable in-app notifications under **My account** (preferences).
+### Enable per user
 
-## Uninstall
+Users can enable or disable in-app notifications under **My account** (preferences). The default is **on**.
 
-```bash
-bundle exec rake redmine:plugins:migrate NAME=redmine_app_notifications VERSION=0 RAILS_ENV=production
-# Then remove the plugin directory from plugins/
-```
+See the [Community install guide](https://redmineshop.com/docs/install) for Docker notes shared with the other free plugins.
 
 ## Configuration
 
-In **Administration → Plugins → Redmine App Notifications → Configure**:
+**Administration → Plugins → Redmine App Notifications → Configure**
 
 - **Notification events** — enable/disable in-app notifications per event:
   - Issue added
@@ -86,15 +83,71 @@ In **Administration → Plugins → Redmine App Notifications → Configure**:
 bundle exec rake redmine:app_notifications:email_fallback RAILS_ENV=production
 ```
 
-This emails unread in-app items older than 24 hours.
+This emails unread in-app items older than 24 hours. The quality harness does **not** cover this cron path.
+
+## Uninstall
+
+```bash
+cd /path/to/redmine
+RAILS_ENV=production bundle exec rake redmine:plugins:migrate NAME=redmine_app_notifications VERSION=0
+```
+
+Remove `plugins/redmine_app_notifications` and restart Redmine. Rolling back the migration **deletes all in-app notification rows**.
+
+## Compatibility
+
+| Redmine | Ruby | Database | Status |
+|---------|------|----------|--------|
+| 6.x     | 3.2+ | MySQL 8 / PostgreSQL | Targeted — **untested** (no published QA matrix) |
+| 5.1.x   | 3.1+ | MySQL 8 / PostgreSQL | Targeted — **untested** |
+| 5.0.x   | 3.0+ | MySQL 8 / PostgreSQL | Targeted — **untested** |
+
+The plugin declares `requires_redmine version_or_higher: '5.0'`. Do not treat catalog versions as tested cells. The demo quality harness is **one** Redmine image, not a 5.1 / 6.x matrix.
+
+## Screenshot
+
+Notifications feed on demo Redmine (plugin quality harness):
+
+![In-app notifications list](screenshots/notifications-feed.png)
+
+Top menu unread count, plugin row, and settings: [screenshots/top-menu.png](screenshots/top-menu.png), [screenshots/admin-plugins.png](screenshots/admin-plugins.png), [screenshots/plugin-settings.png](screenshots/plugin-settings.png).
+
+Refresh from the RedmineShop monorepo: `./demo/scripts/run-plugin-e2e.sh`.
+
+## Tests
+
+Unit + functional tests live under `test/` (MiniTest):
+
+```bash
+bundle exec rake redmine:plugins:test NAME=redmine_app_notifications RAILS_ENV=test
+```
+
+On the RedmineShop demo stack:
+
+```bash
+PLUGIN_NAME=redmine_app_notifications ./demo/scripts/run-sso-plugin-tests.sh
+```
+
+Public sibling CI (`.github/workflows/ci.yml`) is Ruby syntax only (`ruby -c`). That is not the quality bar.
+
+### Quality harness (demo + E2E)
+
+The quality harness lives on the RedmineShop **monorepo** demo stack (`docker-compose.demo.yml`). This public GitHub repo is the plugin only — it does not ship that compose file.
+
+| Bar | Status |
+| --- | --- |
+| Automated tests beyond `ruby -c` | **Verified** — `test/unit` + `test/functional` in this repo (Playwright is a separate row) |
+| Installed + enabled on demo Redmine | **Verified** — mounted via `demo/plugins/` on the monorepo demo stack; seed applies event settings and an unread feed row |
+| E2E primary happy path | **Verified** — Playwright `demo/e2e/tests/redmine_app_notifications.spec.js` (Configure page, top-menu unread count, feed, mark as read). **Not verified:** email fallback cron |
+| UI screenshot in README | **Verified** — `screenshots/{admin-plugins,plugin-settings,top-menu,notifications-feed}.png` from that spec |
+| Redmine 5.1 / 6.x matrix | **Declared / untested** — this harness is one demo image, not a QA matrix |
+
+How to run (monorepo, not this public repo): [plugin quality harness](https://github.com/redmineshop/redmineshop/blob/main/docs/plugin-quality-harness.md).
 
 ## Community support
 
-- [Open an issue on GitHub](https://github.com/redmineshop/redmine_app_notifications/issues)
-- [Product page](https://redmineshop.com/products/redmine-app-notifications)
+Async only: [GitHub issues](https://github.com/redmineshop/redmine_app_notifications/issues) or the [support form](https://redmineshop.com/support). No 24/7 SLA.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) file.
-
-Originally based on [MichalVanzura/redmine_app_notifications](https://github.com/MichalVanzura/redmine_app_notifications), updated for Redmine 5.x/6.x and maintained by RedmineShop.
+MIT License. See [LICENSE](LICENSE). Originally based on [MichalVanzura/redmine_app_notifications](https://github.com/MichalVanzura/redmine_app_notifications), updated for Redmine 5.x/6.x and maintained by RedmineShop. No email required to get the plugin.

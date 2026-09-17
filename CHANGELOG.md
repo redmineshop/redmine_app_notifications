@@ -2,6 +2,21 @@
 
 All notable changes to this plugin. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- Community install is **GitHub-first** (`git clone https://github.com/redmineshop/redmine_app_notifications.git`). Email-funnel packages are no longer the documented download path.
+- README: **Last maintained** date, honest compatibility (untested matrix cells), and verified vs declared quality-harness table. No product-page download CTA.
+
+### Added
+
+- Plugin quality harness on the RedmineShop demo stack: Playwright E2E for the Configure page, top-menu unread count, in-app feed, and mark as read, plus README screenshots.
+
+### Notes
+
+- Email fallback cron is **not** in this E2E. Do not treat the harness as a Redmine 5.1 / 6.x matrix.
+
 ## [1.0.0] — 2026-07-18
 
 First community release via RedmineShop.
