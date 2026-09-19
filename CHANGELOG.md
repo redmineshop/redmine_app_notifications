@@ -7,7 +7,7 @@ All notable changes to this plugin. Format follows [Keep a Changelog](https://ke
 ### Changed
 
 - Community install is **GitHub-first** (`git clone https://github.com/redmineshop/redmine_app_notifications.git`). Email-funnel packages are no longer the documented download path.
-- README: **Last maintained** date, honest compatibility (untested matrix cells), and verified vs declared quality-harness table. No product-page download CTA.
+- README: **Last maintained** 2026-09-18, embed all four harness screenshots, honest compatibility (untested matrix cells), and public-safe harness wording (no clickable private-monorepo URLs). No product-page download CTA.
 
 ### Added
 

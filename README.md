@@ -2,8 +2,9 @@
 
 [![Community · Free forever](https://img.shields.io/badge/Community-Free%20forever-brightgreen)](https://redmineshop.com/products/redmine-app-notifications)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+[![CI](https://github.com/redmineshop/redmine_app_notifications/actions/workflows/ci.yml/badge.svg)](https://github.com/redmineshop/redmine_app_notifications/actions/workflows/ci.yml)
 
-**Last maintained:** 2026-09-17
+**Last maintained:** 2026-09-18
 
 **Source on GitHub:** [github.com/redmineshop/redmine_app_notifications](https://github.com/redmineshop/redmine_app_notifications)
 
@@ -106,13 +107,17 @@ The plugin declares `requires_redmine version_or_higher: '5.0'`. Do not treat ca
 
 ## Screenshot
 
-Notifications feed on demo Redmine (plugin quality harness):
+Notifications feed, top-menu unread count, plugin row, and settings (demo Redmine):
 
 ![In-app notifications list](screenshots/notifications-feed.png)
 
-Top menu unread count, plugin row, and settings: [screenshots/top-menu.png](screenshots/top-menu.png), [screenshots/admin-plugins.png](screenshots/admin-plugins.png), [screenshots/plugin-settings.png](screenshots/plugin-settings.png).
+![Notifications top-menu unread count](screenshots/top-menu.png)
 
-Refresh from the RedmineShop monorepo: `./demo/scripts/run-plugin-e2e.sh`.
+![Plugin listed under Administration → Plugins](screenshots/admin-plugins.png)
+
+![Plugin settings (event toggles)](screenshots/plugin-settings.png)
+
+Screenshot refresh lives in the private `redmineshop/redmineshop` harness. A public clone cannot run it.
 
 ## Tests
 
@@ -122,7 +127,7 @@ Unit + functional tests live under `test/` (MiniTest):
 bundle exec rake redmine:plugins:test NAME=redmine_app_notifications RAILS_ENV=test
 ```
 
-On the RedmineShop demo stack:
+On the private `redmineshop/redmineshop` demo stack (not this public clone):
 
 ```bash
 PLUGIN_NAME=redmine_app_notifications ./demo/scripts/run-sso-plugin-tests.sh
@@ -132,17 +137,17 @@ Public sibling CI (`.github/workflows/ci.yml`) is Ruby syntax only (`ruby -c`). 
 
 ### Quality harness (demo + E2E)
 
-The quality harness lives on the RedmineShop **monorepo** demo stack (`docker-compose.demo.yml`). This public GitHub repo is the plugin only — it does not ship that compose file.
+E2E lives in the **private** `redmineshop/redmineshop` harness (`docker-compose.demo.yml` + Playwright). This public GitHub repo is the plugin only — it does not ship that compose file, and a public clone cannot open private harness docs.
+
+Install and smoke this plugin on your own Redmine: [Community install guide](https://redmineshop.com/docs/install).
 
 | Bar | Status |
 | --- | --- |
 | Automated tests beyond `ruby -c` | **Verified** — `test/unit` + `test/functional` in this repo (Playwright is a separate row) |
-| Installed + enabled on demo Redmine | **Verified** — mounted via `demo/plugins/` on the monorepo demo stack; seed applies event settings and an unread feed row |
-| E2E primary happy path | **Verified** — Playwright `demo/e2e/tests/redmine_app_notifications.spec.js` (Configure page, top-menu unread count, feed, mark as read). **Not verified:** email fallback cron |
+| Installed + enabled on demo Redmine | **Verified** — mounted via `demo/plugins/` on the private monorepo demo stack; seed applies event settings and an unread feed row |
+| E2E primary happy path | **Verified** — Playwright on that private harness (Configure page, top-menu unread count, feed, mark as read). **Not verified:** email fallback cron |
 | UI screenshot in README | **Verified** — `screenshots/{admin-plugins,plugin-settings,top-menu,notifications-feed}.png` from that spec |
 | Redmine 5.1 / 6.x matrix | **Declared / untested** — this harness is one demo image, not a QA matrix |
-
-How to run (monorepo, not this public repo): [plugin quality harness](https://github.com/redmineshop/redmineshop/blob/main/docs/plugin-quality-harness.md).
 
 ## Community support
 
