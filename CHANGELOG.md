@@ -4,6 +4,16 @@ All notable changes to this plugin. Format follows [Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+### Fixed
+
+- Mark as read returns 404 for a missing or non-numeric id. Another user's notification still returns 403 and is left unread.
+- Email fallback sends one `text/plain` digest per recipient, skips issues that recipient can no longer see, and ignores mail headers that contain line breaks. One recipient's delivery error does not stop the rest of the run.
+- My account saves the in-app notification checkbox after a successful account update, including when the box is unchecked.
+
+### Added
+
+- MiniTest for the email fallback rake behavior, issue and journal notification hooks, and the My account preference toggle.
+
 ### Changed
 
 - Community install is **GitHub-first** (`git clone https://github.com/redmineshop/redmine_app_notifications.git`). Email-funnel packages are no longer the documented download path.

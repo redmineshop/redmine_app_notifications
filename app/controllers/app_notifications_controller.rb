@@ -28,8 +28,16 @@ class AppNotificationsController < ApplicationController
   private
 
   def find_notification
-    @notification = AppNotification.find(params[:id])
-  rescue ActiveRecord::RecordNotFound
+    # Reject non-numeric ids before the query so array or SQL-shaped params cannot reach find.
+    id = params[:id].to_s
+    unless /\A[1-9]\d*\z/.match?(id)
+      render_404
+      return
+    end
+
+    @notification = AppNotification.find_by(id: id)
+    return if @notification
+
     render_404
   end
 end

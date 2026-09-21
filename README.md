@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![CI](https://github.com/redmineshop/redmine_app_notifications/actions/workflows/ci.yml/badge.svg)](https://github.com/redmineshop/redmine_app_notifications/actions/workflows/ci.yml)
 
-**Last maintained:** 2026-09-18
+**Last maintained:** 2026-09-22
 
 **Source on GitHub:** [github.com/redmineshop/redmine_app_notifications](https://github.com/redmineshop/redmine_app_notifications)
 
@@ -84,7 +84,7 @@ See the [Community install guide](https://redmineshop.com/docs/install) for Dock
 bundle exec rake redmine:app_notifications:email_fallback RAILS_ENV=production
 ```
 
-This emails unread in-app items older than 24 hours. The quality harness does **not** cover this cron path.
+This emails unread in-app items older than 24 hours, one plain-text digest per recipient. Rows stay unread, so a later run includes them again until someone marks them read. Recipients who can no longer see the issue are skipped. MiniTest covers that rake behavior. Playwright does not.
 
 ## Uninstall
 
@@ -143,7 +143,7 @@ Install and smoke this plugin on your own Redmine: [Community install guide](htt
 
 | Bar | Status |
 | --- | --- |
-| Automated tests beyond `ruby -c` | **Verified** — `test/unit` + `test/functional` in this repo (Playwright is a separate row) |
+| Automated tests beyond `ruby -c` | **Verified** — `test/unit` + `test/functional` in this repo, including email fallback (setting off, 24h cutoff, per-recipient mail), issue/journal hooks, and the My account toggle (Playwright is a separate row) |
 | Installed + enabled on demo Redmine | **Verified** — mounted via `demo/plugins/` on the private monorepo demo stack; seed applies event settings and an unread feed row |
 | E2E primary happy path | **Verified** — Playwright on that private harness (Configure page, top-menu unread count, feed, mark as read). **Not verified:** email fallback cron |
 | UI screenshot in README | **Verified** — `screenshots/{admin-plugins,plugin-settings,top-menu,notifications-feed}.png` from that spec |

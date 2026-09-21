@@ -1,5 +1,6 @@
 <p>
-  <label><%= check_box_tag 'pref[app_notifications]', '1', User.current.app_notification_enabled? %>
+  <%= hidden_field_tag 'pref[app_notifications]', '0', id: 'pref_app_notifications_off' %>
+  <label><%= check_box_tag 'pref[app_notifications]', '1', User.current.app_notification_enabled?, id: 'pref_app_notifications' %>
   <%= l('redmine_app_notifications.my_account.enable') %></label>
   <em class="info"><%= l('redmine_app_notifications.my_account.enable_info') %></em>
 </p>

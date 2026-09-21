@@ -11,6 +11,16 @@ class AppNotificationsSettingsControllerTest < Redmine::ControllerTest
     @request.session[:user_id] = 1 # admin
   end
 
+  def test_plugin_settings_require_admin
+    @request.session[:user_id] = 2
+    get :plugin, params: { id: 'redmine_app_notifications' }
+    assert_response :forbidden
+
+    @request.session[:user_id] = nil
+    get :plugin, params: { id: 'redmine_app_notifications' }
+    assert_response :redirect
+  end
+
   def test_plugin_settings_renders_event_checkboxes
     get :plugin, params: { id: 'redmine_app_notifications' }
     assert_response :success
