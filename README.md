@@ -8,9 +8,11 @@
 
 **Source on GitHub:** [github.com/redmineshop/redmine_app_notifications](https://github.com/redmineshop/redmine_app_notifications)
 
+In-app Notifications menu for Redmine.
+
 In-app notification feed for Redmine — issue activity appears in a **Notifications** top-menu entry with an unread count, so users can catch up without living in email.
 
-Community edition is **free forever** — no license key, no phone-home, **no email to clone**.
+Community edition is free — no license key and no phone-home. Clone from this repository.
 
 ## Features
 
@@ -97,13 +99,15 @@ Remove `plugins/redmine_app_notifications` and restart Redmine. Rolling back the
 
 ## Compatibility
 
-| Redmine | Ruby | Database | Status |
-|---------|------|----------|--------|
-| 6.x     | 3.2+ | MySQL 8 / PostgreSQL | Targeted — **untested** (no published QA matrix) |
-| 5.1.x   | 3.1+ | MySQL 8 / PostgreSQL | Targeted — **untested** |
-| 5.0.x   | 3.0+ | MySQL 8 / PostgreSQL | Targeted — **untested** |
+Declared follows `requires_redmine version_or_higher: '5.0'` for 5.x and 6.x. Redmine 7.0 is not a claimed target. Tested means a run pinned to that Redmine line. The demo image is official `redmine:latest` (tag not pinned), so a demo boot is not a pass for a specific row.
 
-The plugin declares `requires_redmine version_or_higher: '5.0'`. Do not treat catalog versions as tested cells. The demo quality harness is **one** Redmine image, not a 5.1 / 6.x matrix.
+| Redmine | Declared | Tested |
+|---------|----------|--------|
+| 5.0.x   | Yes      | No — unverified |
+| 5.1.x   | Yes      | No — unverified |
+| 6.0.x   | Yes      | No — unverified |
+| 6.1.x   | Yes      | No — unverified |
+| 7.0.x   | No       | No — unverified |
 
 ## Screenshot
 
@@ -117,7 +121,7 @@ Notifications feed, top-menu unread count, plugin row, and settings (demo Redmin
 
 ![Plugin settings (event toggles)](screenshots/plugin-settings.png)
 
-Screenshot refresh lives in the private `redmineshop/redmineshop` harness. A public clone cannot run it.
+Images are crops from a demo Redmine. The Redmine version in the capture was not recorded. `top-menu.png` is a short menu crop. A full-page screenshot is still TODO.
 
 ## Tests
 
@@ -127,27 +131,15 @@ Unit + functional tests live under `test/` (MiniTest):
 bundle exec rake redmine:plugins:test NAME=redmine_app_notifications RAILS_ENV=test
 ```
 
-On the private `redmineshop/redmineshop` demo stack (not this public clone):
+Public GitHub Actions (`.github/workflows/ci.yml`) runs Ruby syntax checks only (`ruby -c`).
 
-```bash
-PLUGIN_NAME=redmine_app_notifications ./demo/scripts/run-sso-plugin-tests.sh
-```
+## Limits
 
-Public sibling CI (`.github/workflows/ci.yml`) is Ruby syntax only (`ruby -c`). That is not the quality bar.
-
-### Quality harness (demo + E2E)
-
-E2E lives in the **private** `redmineshop/redmineshop` harness (`docker-compose.demo.yml` + Playwright). This public GitHub repo is the plugin only — it does not ship that compose file, and a public clone cannot open private harness docs.
-
-Install and smoke this plugin on your own Redmine: [Community install guide](https://redmineshop.com/docs/install).
-
-| Bar | Status |
-| --- | --- |
-| Automated tests beyond `ruby -c` | **Verified** — `test/unit` + `test/functional` in this repo, including email fallback (setting off, 24h cutoff, per-recipient mail), issue/journal hooks, and the My account toggle (Playwright is a separate row) |
-| Installed + enabled on demo Redmine | **Verified** — mounted via `demo/plugins/` on the private monorepo demo stack; seed applies event settings and an unread feed row |
-| E2E primary happy path | **Verified** — Playwright on that private harness (Configure page, top-menu unread count, feed, mark as read). **Not verified:** email fallback cron |
-| UI screenshot in README | **Verified** — `screenshots/{admin-plugins,plugin-settings,top-menu,notifications-feed}.png` from that spec |
-| Redmine 5.1 / 6.x matrix | **Declared / untested** — this harness is one demo image, not a QA matrix |
+- In-app feed only. There is no browser push and no external realtime service.
+- Email fallback is a cron rake task. MiniTest covers that task. It is not a browser flow.
+- Uninstall with `VERSION=0` deletes every in-app notification row.
+- MiniTest does not boot Redmine 5.0, 5.1, 6.0, 6.1, or 7.0.
+- Install notes: [Community install guide](https://redmineshop.com/docs/install).
 
 ## Community support
 
