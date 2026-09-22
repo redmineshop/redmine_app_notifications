@@ -107,15 +107,19 @@ The plugin declares `requires_redmine version_or_higher: '5.0'`. Do not treat ca
 
 ## Screenshot
 
-Notifications feed, top-menu unread count, plugin row, and settings (demo Redmine):
+Logged-in Redmine. Notifications is an entry in the top menu (unread count included).
 
-![In-app notifications list](screenshots/notifications-feed.png)
+![Notifications entry in the Redmine top menu](screenshots/top-menu.png)
 
-![Notifications top-menu unread count](screenshots/top-menu.png)
+The feed is a page, not a dropdown. The sample rows are an issue report, a note, and an assignment. This plugin has no separate mention or reminder event type.
 
-![Plugin listed under Administration → Plugins](screenshots/admin-plugins.png)
+![In-app notification feed](screenshots/notifications-dropdown.png)
+
+Which events create an in-app item:
 
 ![Plugin settings (event toggles)](screenshots/plugin-settings.png)
+
+![Plugin listed under Administration → Plugins](screenshots/admin-plugins.png)
 
 Screenshot refresh lives in the private `redmineshop/redmineshop` harness. A public clone cannot run it.
 
@@ -144,9 +148,9 @@ Install and smoke this plugin on your own Redmine: [Community install guide](htt
 | Bar | Status |
 | --- | --- |
 | Automated tests beyond `ruby -c` | **Verified** — `test/unit` + `test/functional` in this repo, including email fallback (setting off, 24h cutoff, per-recipient mail), issue/journal hooks, and the My account toggle (Playwright is a separate row) |
-| Installed + enabled on demo Redmine | **Verified** — mounted via `demo/plugins/` on the private monorepo demo stack; seed applies event settings and an unread feed row |
+| Installed + enabled on demo Redmine | **Verified** — mounted via `demo/plugins/` on the private monorepo demo stack; seed applies event settings and three unread feed rows |
 | E2E primary happy path | **Verified** — Playwright on that private harness (Configure page, top-menu unread count, feed, mark as read). **Not verified:** email fallback cron |
-| UI screenshot in README | **Verified** — `screenshots/{admin-plugins,plugin-settings,top-menu,notifications-feed}.png` from that spec |
+| UI screenshot in README | **Verified** — `screenshots/{top-menu,notifications-dropdown,plugin-settings,admin-plugins}.png` from that spec (full Redmine pages). `notifications-feed.png` is the same feed image, kept so older links still resolve. |
 | Redmine 5.1 / 6.x matrix | **Declared / untested** — this harness is one demo image, not a QA matrix |
 
 ## Community support
