@@ -202,6 +202,28 @@ class EmailFallbackTest < ActiveSupport::TestCase
     assert_equal [@other.mail], mailer.deliveries.map(&:to)
   end
 
+  def test_skips_private_note_rows_the_recipient_cannot_read
+    journal = Journal.new(
+      journalized: @issue,
+      user: User.find(1),
+      notes: 'secret note body',
+      private_notes: true
+    )
+    journal.notify = false
+    assert journal.save, journal.errors.full_messages.join(', ')
+    create_notification(@other, @issue, @now - 2.days).update!(journal_id: journal.id)
+    create_notification(@user, @other_issue, @now - 2.days)
+    assert_not @other.allowed_to?(:view_private_notes, @issue.project)
+    mailer = RecordingMailer.new
+
+    result = RedmineAppNotifications::EmailFallback.deliver!(now: @now, mailer: mailer)
+
+    assert_equal 1, result.sent
+    assert_equal [@user.mail], mailer.deliveries.map(&:to)
+    assert_not_includes mailer.deliveries.first.body, 'secret note body'
+    assert_not_includes mailer.deliveries.first.body, "##{@issue.id}"
+  end
+
   def test_blank_mail_from_sends_nothing
     Setting.mail_from = ''
     create_notification(@user, @issue, @now - 2.days)

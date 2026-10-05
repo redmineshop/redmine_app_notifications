@@ -5,6 +5,7 @@ require 'redmine'
 require_relative 'lib/redmine_app_notifications/version'
 require_relative 'lib/redmine_app_notifications/settings'
 require_relative 'lib/redmine_app_notifications/hooks'
+require_relative 'lib/redmine_app_notifications/delivery'
 require_relative 'lib/redmine_app_notifications/user_patch'
 require_relative 'lib/redmine_app_notifications/issue_patch'
 require_relative 'lib/redmine_app_notifications/journal_patch'
@@ -27,8 +28,14 @@ Redmine::Plugin.register :redmine_app_notifications do
        :app_notifications,
        { controller: 'app_notifications', action: 'index' },
        caption: proc {
-         label = I18n.t('redmine_app_notifications.menu_caption')
-         count = AppNotification.unread_count_for(User.current)
+         label = I18n.t('redmine_app_notifications.menu_caption').to_s
+         count =
+           begin
+             AppNotification.unread_count_for(User.current)
+           rescue StandardError
+             0
+           end
+         count = count.to_i
          count.positive? ? "#{label} (#{count})" : label
        },
        html: { class: 'app-notifications-bell' },
@@ -36,18 +43,24 @@ Redmine::Plugin.register :redmine_app_notifications do
        if: proc { User.current.logged? }
 end
 
-unless User.ancestors.include?(RedmineAppNotifications::UserPatch)
-  User.prepend(RedmineAppNotifications::UserPatch)
+module RedmineAppNotifications
+  def self.apply_patches!
+    prepend_once(User, UserPatch)
+    prepend_once(Issue, IssuePatch)
+    prepend_once(Journal, JournalPatch)
+    prepend_once(MyController, MyControllerPatch)
+  end
+
+  def self.prepend_once(model, patch)
+    return if model.ancestors.include?(patch)
+
+    model.prepend(patch)
+  end
 end
 
-unless Issue.ancestors.include?(RedmineAppNotifications::IssuePatch)
-  Issue.prepend(RedmineAppNotifications::IssuePatch)
-end
+RedmineAppNotifications.apply_patches!
 
-unless Journal.ancestors.include?(RedmineAppNotifications::JournalPatch)
-  Journal.prepend(RedmineAppNotifications::JournalPatch)
-end
-
-unless MyController.ancestors.include?(RedmineAppNotifications::MyControllerPatch)
-  MyController.prepend(RedmineAppNotifications::MyControllerPatch)
+reloader = defined?(ActiveSupport::Reloader) ? ActiveSupport::Reloader : ActionDispatch::Callbacks
+reloader.to_prepare do
+  RedmineAppNotifications.apply_patches!
 end

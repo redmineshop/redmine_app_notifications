@@ -19,7 +19,8 @@ module RedmineAppNotifications
       return unless pref_params.respond_to?(:key?)
       return unless pref_params.key?('app_notifications')
 
-      User.current.pref[:app_notifications] = pref_params[:app_notifications].to_s == '1'
+      # String key so the value still matches after YAML reloads the others hash.
+      User.current.pref['app_notifications'] = pref_params[:app_notifications].to_s == '1'
       User.current.pref.save
     end
 

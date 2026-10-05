@@ -162,4 +162,199 @@ class AppNotificationsControllerTest < Redmine::ControllerTest
   ensure
     ActionController::Base.allow_forgery_protection = previous
   end
+
+  def test_index_omits_issues_the_user_cannot_see
+    hidden_project = Issue.find(4)
+    private_issue = Issue.find(14)
+    assert_not hidden_project.visible?(@other)
+    assert_not private_issue.visible?(@other)
+    AppNotification.delete_all
+    visible = AppNotification.create!(
+      issue_id: Issue.find(1).id,
+      author_id: 1,
+      recipient_id: @other.id,
+      viewed: false
+    )
+    AppNotification.create!(
+      issue_id: hidden_project.id,
+      author_id: 1,
+      recipient_id: @other.id,
+      viewed: false
+    )
+    AppNotification.create!(
+      issue_id: private_issue.id,
+      author_id: 1,
+      recipient_id: @other.id,
+      viewed: false
+    )
+
+    @request.session[:user_id] = @other.id
+    get :index
+    assert_response :success
+    assert_select 'table.list.app-notifications tbody tr', count: 1
+    assert_select 'span.app-notifications-badge', text: /1/
+    assert_equal 1, AppNotification.unread_count_for(@other)
+    assert_match(/#{visible.issue_id}/, response.body)
+    assert_no_match(/#{hidden_project.subject}/, response.body)
+    assert_no_match(/#{private_issue.subject}/, response.body)
+  end
+
+  def test_mark_all_read_leaves_hidden_own_rows_unread
+    hidden = AppNotification.create!(
+      issue_id: Issue.find(4).id,
+      author_id: 1,
+      recipient_id: @other.id,
+      viewed: false
+    )
+    visible = AppNotification.create!(
+      issue_id: Issue.find(1).id,
+      author_id: 1,
+      recipient_id: @other.id,
+      viewed: false
+    )
+    @request.session[:user_id] = @other.id
+    post :mark_all_read
+    assert_redirected_to '/app_notifications'
+    assert visible.reload.viewed?
+    assert_equal false, hidden.reload.viewed?
+  end
+
+  def test_mark_read_of_a_hidden_own_row_is_not_found
+    hidden = AppNotification.create!(
+      issue_id: Issue.find(4).id,
+      author_id: 1,
+      recipient_id: @other.id,
+      viewed: false
+    )
+    @request.session[:user_id] = @other.id
+    post :mark_read, params: { id: hidden.id }
+    assert_response :not_found
+    assert_equal false, hidden.reload.viewed?
+  end
+
+  def test_mark_read_ignores_extra_attributes
+    @request.session[:user_id] = @user.id
+    post :mark_read, params: {
+      id: @notification.id,
+      recipient_id: @other.id,
+      app_notification: { recipient_id: @other.id, author_id: @other.id, viewed: false }
+    }
+    @notification.reload
+    assert @notification.viewed?
+    assert_equal @user.id, @notification.recipient_id
+    assert_not_equal @other.id, @notification.author_id
+  end
+
+  def test_mark_read_rejects_an_array_id
+    @request.session[:user_id] = @user.id
+    post :mark_read, params: { id: [@notification.id] }
+    assert_response :not_found
+    assert_equal false, @notification.reload.viewed?
+  end
+
+  def test_get_does_not_mark_read
+    @request.session[:user_id] = @user.id
+    get :mark_read, params: { id: @notification.id }
+    assert_response :not_found
+    get :mark_all_read
+    assert_response :not_found
+    assert_equal false, @notification.reload.viewed?
+  end
+
+  def test_mark_all_read_requires_authenticity_token
+    @request.session[:user_id] = @user.id
+    previous = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    begin
+      post :mark_all_read
+    rescue ActionController::InvalidAuthenticityToken
+      # Rejected before the action. The row must stay unread either way.
+    end
+    assert_equal false, @notification.reload.viewed?, 'mark_all_read changed state without an authenticity token'
+  ensure
+    ActionController::Base.allow_forgery_protection = previous
+  end
+
+  def test_index_escapes_issue_subject_and_notes
+    issue = Issue.find(@notification.issue_id)
+    issue.update_column(:subject, '<script>alert(subject)</script>')
+    journal = Journal.new(
+      journalized: issue,
+      user_id: 1,
+      notes: '<img src=x onerror=alert(note)>'
+    )
+    journal.notify = false
+    assert journal.save, journal.errors.full_messages.join(', ')
+    @notification.update!(journal_id: journal.id)
+
+    @request.session[:user_id] = @user.id
+    get :index
+    assert_response :success
+    assert_no_match(/<script>alert\(subject\)<\/script>/, response.body)
+    assert_no_match(/<img src=x onerror=alert\(note\)>/, response.body)
+    assert_match(/&lt;script&gt;alert\(subject\)&lt;\/script&gt;/, response.body)
+    assert_match(/&lt;img src=x onerror=alert\(note\)&gt;/, response.body)
+
+    menu = css_select('#top-menu').map(&:to_s).join
+    assert_match(/app-notifications-bell/, menu)
+    assert_no_match(/alert\(subject\)/, menu)
+    assert_no_match(/alert\(note\)/, menu)
+    assert_no_match(/<script/, menu)
+  end
+
+  def test_index_does_not_render_private_note_text
+    issue = Issue.find(1)
+    journal = Journal.new(
+      journalized: issue,
+      user_id: 2,
+      notes: 'SECRETNOTE123',
+      private_notes: true
+    )
+    journal.notify = false
+    assert journal.save, journal.errors.full_messages.join(', ')
+    AppNotification.delete_all
+    AppNotification.create!(
+      issue_id: issue.id,
+      journal_id: journal.id,
+      author_id: 2,
+      recipient_id: @other.id,
+      viewed: false
+    )
+    assert_not @other.allowed_to?(:view_private_notes, issue.project)
+
+    @request.session[:user_id] = @other.id
+    get :index
+    assert_response :success
+    assert_no_match(/SECRETNOTE123/, response.body)
+    assert_select 'table.list.app-notifications tbody tr', count: 0
+  end
+
+  def test_index_preloads_projects_and_authors
+    AppNotification.delete_all
+    [1, 2, 3].each do |issue_id|
+      AppNotification.create!(
+        issue_id: issue_id,
+        author_id: 1,
+        recipient_id: @user.id,
+        viewed: false
+      )
+    end
+    queries = []
+    callback = lambda do |_name, _start, _finish, _id, payload|
+      queries << payload[:sql].to_s
+    end
+    @request.session[:user_id] = @user.id
+    ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+      get :index
+    end
+    assert_response :success
+    rendered = css_select('table.list.app-notifications tbody tr').size
+    assert_operator rendered, :>=, 2
+
+    # One layout or preload lookup is fine. One query per row is not.
+    per_row_projects = queries.count { |sql| sql.match?(/FROM ["`]projects["`].*["`]id["`]\s*=\s*\?/i) }
+    per_row_users = queries.count { |sql| sql.match?(/FROM ["`]users["`].*["`]id["`]\s*=\s*\?/i) }
+    assert_operator per_row_projects, :<, rendered, queries.grep(/FROM ["`]projects["`]/).join("\n")
+    assert_operator per_row_users, :<, rendered, queries.grep(/FROM ["`]users["`]/).join("\n")
+  end
 end

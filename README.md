@@ -1,39 +1,39 @@
 # Redmine App Notifications
 
 [![Community · Free forever](https://img.shields.io/badge/Community-Free%20forever-brightgreen)](https://redmineshop.com/products/redmine-app-notifications)
+[![Redmine 7.0.1 verified](https://img.shields.io/badge/Redmine-7.0.1%20verified-blue)](https://github.com/redmineshop/redmine_app_notifications/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![CI](https://github.com/redmineshop/redmine_app_notifications/actions/workflows/ci.yml/badge.svg)](https://github.com/redmineshop/redmine_app_notifications/actions/workflows/ci.yml)
 
-**Last maintained:** 2026-09-22
+**Last maintained:** 2026-10-05
 
 **Source on GitHub:** [github.com/redmineshop/redmine_app_notifications](https://github.com/redmineshop/redmine_app_notifications)
 
-In-app notification feed for Redmine — issue activity appears in a **Notifications** top-menu entry with an unread count, so users can catch up without living in email.
+In-app notification feed for Redmine. Issue activity appears in a **Notifications** top-menu entry with an unread count, so users can catch up without living in email.
 
-Community edition is **free forever** — no license key, no phone-home, **no email to clone**.
+Community edition is free forever: no license key, and no email address required to clone.
 
 ## Features
 
-- **Notifications** entry in the Redmine top menu with unread count
-- In-app feed for issue create / update / note / status / assignee / priority (configurable)
-- Mark individual or all notifications as read
-- Per-user toggle under **My account**
-- Optional email fallback via cron rake task (admin setting)
+- **Notifications** entry in the Redmine top menu with an unread count
+- In-app feed for issue create, update, note, status, assignee, and priority (each event can be turned off)
+- Mark one notification read, or mark all visible notifications read
+- The feed, the unread count, and mark-all include only issues the current user can see, including private issues and private projects
+- Private notes are not delivered or shown to users who cannot view them
+- Per-user toggle under **My account** (default on)
+- Optional email fallback via a cron rake task (admin setting)
 - Admin settings use standard Redmine tabular forms
-- No Faye or other external realtime services required
+- No external realtime service
 
 ## Requirements
 
-- Redmine 5.0.x or 6.x (`requires_redmine version_or_higher: '5.0'`)
-- Ruby 3.0+
-- MySQL 8 or PostgreSQL
-- A plugin migration (`app_notifications` table)
+- Redmine 5.0 or newer (`requires_redmine version_or_higher: '5.0'`)
+- Ruby is the version shipped with that Redmine release. Public CI uses the official `redmine:7.0.1` image
+- The database Redmine is using. Public CI uses SQLite
 
 ## Installation
 
-**Estimated time: 10 minutes.**
-
-Clone into `plugins/redmine_app_notifications` in your Redmine install (folder name must match):
+Clone into `plugins/redmine_app_notifications` (the folder name must match):
 
 ```bash
 cd /path/to/redmine/plugins
@@ -63,7 +63,7 @@ No extra gems.
 
 ### Enable per user
 
-Users can enable or disable in-app notifications under **My account** (preferences). The default is **on**.
+Users can enable or disable in-app notifications under **My account**. The default is on.
 
 See the [Community install guide](https://redmineshop.com/docs/install) for Docker notes shared with the other free plugins.
 
@@ -71,7 +71,7 @@ See the [Community install guide](https://redmineshop.com/docs/install) for Dock
 
 **Administration → Plugins → Redmine App Notifications → Configure**
 
-- **Notification events** — enable/disable in-app notifications per event:
+- **Notification events** — enable or disable in-app notifications per event:
   - Issue added
   - Issue updated (other changes)
   - Issue note added
@@ -84,7 +84,7 @@ See the [Community install guide](https://redmineshop.com/docs/install) for Dock
 bundle exec rake redmine:app_notifications:email_fallback RAILS_ENV=production
 ```
 
-This emails unread in-app items older than 24 hours, one plain-text digest per recipient. Rows stay unread, so a later run includes them again until someone marks them read. Recipients who can no longer see the issue are skipped. MiniTest covers that rake behavior. Playwright does not.
+This emails unread in-app items older than 24 hours, one plain-text digest per recipient. Rows stay unread, so a later run includes them again until someone marks them read. Recipients who can no longer see the issue, and private notes they cannot read, are skipped. MiniTest covers that rake task.
 
 ## Uninstall
 
@@ -93,17 +93,21 @@ cd /path/to/redmine
 RAILS_ENV=production bundle exec rake redmine:plugins:migrate NAME=redmine_app_notifications VERSION=0
 ```
 
-Remove `plugins/redmine_app_notifications` and restart Redmine. Rolling back the migration **deletes all in-app notification rows**.
+Remove `plugins/redmine_app_notifications` and restart Redmine. Rolling back the migration deletes all in-app notification rows.
 
 ## Compatibility
 
-| Redmine | Ruby | Database | Status |
-|---------|------|----------|--------|
-| 6.x     | 3.2+ | MySQL 8 / PostgreSQL | Targeted — **untested** (no published QA matrix) |
-| 5.1.x   | 3.1+ | MySQL 8 / PostgreSQL | Targeted — **untested** |
-| 5.0.x   | 3.0+ | MySQL 8 / PostgreSQL | Targeted — **untested** |
+`init.rb` sets `requires_redmine version_or_higher: '5.0'`, so 5.0 and newer are declared. Verified means public CI booted that Redmine version, installed this plugin, ran its migrations, and ran the MiniTest suite. MySQL and PostgreSQL are not part of that job. SQLite is what the official image uses in CI.
 
-The plugin declares `requires_redmine version_or_higher: '5.0'`. Do not treat catalog versions as tested cells. The demo quality harness is **one** Redmine image, not a 5.1 / 6.x matrix.
+| Redmine | Declared | Verified |
+|---------|----------|----------|
+| 5.0.x   | Yes      | No |
+| 5.1.x   | Yes      | No |
+| 6.0.x   | Yes      | No |
+| 6.1.x   | Yes      | No |
+| 7.0.1   | Yes      | Yes — official `redmine:7.0.1` image (Ruby 4.0.7, Rails 8.1.3.1), SQLite, via `test/run-redmine-7.0.1.sh`: 77 runs, 343 assertions, 0 failures, 0 errors, 0 skips |
+
+Other 7.0 patch releases were not run.
 
 ## Screenshot
 
@@ -121,37 +125,33 @@ Which events create an in-app item:
 
 ![Plugin listed under Administration → Plugins](screenshots/admin-plugins.png)
 
-Screenshot refresh lives in the private `redmineshop/redmineshop` harness. A public clone cannot run it.
+These screenshots were not regenerated for the 7.0.1 CI job.
 
 ## Tests
 
-Unit + functional tests live under `test/` (MiniTest):
+MiniTest lives under `test/`. It covers:
+
+- Notification rows from issue create, note, status, assignee, priority, and other updates, including when an event setting is off
+- Per-user opt-out under My account, and the default of on
+- Unread count
+- Mark one read and mark all read, limited to the current user's visible rows
+- Private projects, private issues, and private notes
+- The email fallback rake task (setting off, 24 hour cutoff, one digest per recipient, hidden issues skipped)
+- Feed authorization, POST-only mark-read routes, a missing authenticity token, and HTML escaping of author, project, issue subject, and note text
+
+Public CI (`.github/workflows/ci.yml`) boots official `redmine:7.0.1`, installs this plugin, runs migrations, and runs that suite. Ruby syntax (`ruby -c` on Ruby 3.2) is a separate job.
+
+```bash
+bash test/run-redmine-7.0.1.sh
+```
+
+On a Redmine install that already has this plugin migrated:
 
 ```bash
 bundle exec rake redmine:plugins:test NAME=redmine_app_notifications RAILS_ENV=test
 ```
 
-On the private `redmineshop/redmineshop` demo stack (not this public clone):
-
-```bash
-PLUGIN_NAME=redmine_app_notifications ./demo/scripts/run-sso-plugin-tests.sh
-```
-
-Public sibling CI (`.github/workflows/ci.yml`) is Ruby syntax only (`ruby -c`). That is not the quality bar.
-
-### Quality harness (demo + E2E)
-
-E2E lives in the **private** `redmineshop/redmineshop` harness (`docker-compose.demo.yml` + Playwright). This public GitHub repo is the plugin only — it does not ship that compose file, and a public clone cannot open private harness docs.
-
-Install and smoke this plugin on your own Redmine: [Community install guide](https://redmineshop.com/docs/install).
-
-| Bar | Status |
-| --- | --- |
-| Automated tests beyond `ruby -c` | **Verified** — `test/unit` + `test/functional` in this repo, including email fallback (setting off, 24h cutoff, per-recipient mail), issue/journal hooks, and the My account toggle (Playwright is a separate row) |
-| Installed + enabled on demo Redmine | **Verified** — mounted via `demo/plugins/` on the private monorepo demo stack; seed applies event settings and three unread feed rows |
-| E2E primary happy path | **Verified** — Playwright on that private harness (Configure page, top-menu unread count, feed, mark as read). **Not verified:** email fallback cron |
-| UI screenshot in README | **Verified** — `screenshots/{top-menu,notifications-dropdown,plugin-settings,admin-plugins}.png` from that spec (full Redmine pages). `notifications-feed.png` is the same feed image, kept so older links still resolve. |
-| Redmine 5.1 / 6.x matrix | **Declared / untested** — this harness is one demo image, not a QA matrix |
+This repository does not include a browser end-to-end run. The screenshots above were not regenerated for the 7.0.1 CI job. Install the plugin on your own Redmine with the steps in [Installation](#installation).
 
 ## Community support
 
@@ -159,4 +159,4 @@ Async only: [GitHub issues](https://github.com/redmineshop/redmine_app_notificat
 
 ## License
 
-MIT License. See [LICENSE](LICENSE). Originally based on [MichalVanzura/redmine_app_notifications](https://github.com/MichalVanzura/redmine_app_notifications), updated for Redmine 5.x/6.x and maintained by RedmineShop. No email required to get the plugin.
+MIT License. See [LICENSE](LICENSE). Originally based on [MichalVanzura/redmine_app_notifications](https://github.com/MichalVanzura/redmine_app_notifications), updated for Redmine 5.x and later and maintained by RedmineShop. No email required to get the plugin.

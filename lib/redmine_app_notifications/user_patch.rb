@@ -3,8 +3,14 @@
 module RedmineAppNotifications
   module UserPatch
     def app_notification_enabled?
-      value = pref[:app_notifications]
-      return true if value.nil?
+      others = pref.others || {}
+      if others.key?('app_notifications')
+        value = others['app_notifications']
+      elsif others.key?(:app_notifications)
+        value = others[:app_notifications]
+      else
+        return true
+      end
 
       ActiveModel::Type::Boolean.new.cast(value)
     end
