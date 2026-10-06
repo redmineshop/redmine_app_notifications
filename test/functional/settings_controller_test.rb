@@ -48,4 +48,17 @@ class AppNotificationsSettingsControllerTest < Redmine::ControllerTest
   ensure
     Setting.plugin_redmine_app_notifications = RedmineAppNotifications::Settings.defaults
   end
+
+  def test_plugin_settings_post_requires_admin
+    Setting.plugin_redmine_app_notifications = RedmineAppNotifications::Settings.defaults
+    @request.session[:user_id] = 2
+    post :plugin, params: {
+      id: 'redmine_app_notifications',
+      settings: { 'issue_added' => '0' }
+    }
+    assert_response :forbidden
+    assert_equal '1', Setting.plugin_redmine_app_notifications['issue_added']
+  ensure
+    Setting.plugin_redmine_app_notifications = RedmineAppNotifications::Settings.defaults
+  end
 end

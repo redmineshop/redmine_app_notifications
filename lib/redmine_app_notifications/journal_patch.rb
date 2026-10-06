@@ -17,21 +17,14 @@ module RedmineAppNotifications
       issue = journalized
       return unless issue.is_a?(Issue)
 
-      recipients = (notified_users + notified_watchers).uniq
-      recipients.each do |recipient|
-        next if recipient.id == user_id
-        next unless recipient.app_notification_enabled?
-
-        AppNotification.create(
-          journal_id: id,
-          issue_id: issue.id,
-          author_id: user_id,
-          recipient_id: recipient.id,
-          viewed: false
-        )
-      end
+      RedmineAppNotifications::Delivery.deliver(
+        issue: issue,
+        author_id: user_id,
+        journal: self,
+        recipients: (notified_users + notified_watchers).uniq
+      )
     rescue StandardError => e
-      Rails.logger.error("[redmine_app_notifications] journal create notify failed: #{e.message}")
+      Rails.logger.error("[redmine_app_notifications] journal create notify failed: #{e.class}")
     end
 
     def should_notify_for_journal?
@@ -54,5 +47,3 @@ module RedmineAppNotifications
     end
   end
 end
-
-

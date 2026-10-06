@@ -4,28 +4,21 @@ All notable changes to this plugin. Format follows [Keep a Changelog](https://ke
 
 ## [Unreleased]
 
-### Fixed
-
-- Mark as read returns 404 for a missing or non-numeric id. Another user's notification still returns 403 and is left unread.
-- Email fallback sends one `text/plain` digest per recipient, skips issues that recipient can no longer see, and ignores mail headers that contain line breaks. One recipient's delivery error does not stop the rest of the run.
-- My account saves the in-app notification checkbox after a successful account update, including when the box is unchecked.
-
 ### Added
 
-- MiniTest for the email fallback rake behavior, issue and journal notification hooks, and the My account preference toggle.
+- Public CI boots official Redmine 7.0.1, installs this plugin, runs its migrations, and runs the MiniTest suite on SQLite. Ruby syntax stays a separate job.
+- MiniTest for issue create, note, status, assignee, priority, and other updates; per-user opt-out; unread count; mark one and mark all read; private issues, private projects, and private notes; the email fallback rake task.
+
+### Fixed
+
+- The feed, unread count, and mark-all action skip issues the current user cannot see.
+- Private notes are not created, listed, or emailed for users who cannot view them.
+- Mark as read returns 404 for a missing, non-numeric, or invisible id, and 403 for another user's row. GET does not mark rows read.
+- Feed links escape the issue subject and note. The top-menu caption is the localized label plus the unread count.
 
 ### Changed
 
-- Community install is **GitHub-first** (`git clone https://github.com/redmineshop/redmine_app_notifications.git`). Email-funnel packages are no longer the documented download path.
-- README: Last maintained date, screenshots, and untested compatibility cells. Install path is GitHub clone.
-
-### Added
-
-- Plugin quality harness on the RedmineShop demo stack: Playwright E2E for the Configure page, top-menu unread count, in-app feed, and mark as read, plus README screenshots.
-
-### Notes
-
-- Email fallback cron is **not** in this E2E. Do not treat the harness as a Redmine 5.1 / 6.x matrix.
+- Compatibility table lists Redmine 7.0.1 as verified on SQLite. Redmine 5.0, 5.1, and 6.x stay declared and were not booted.
 
 ## [1.0.0] — 2026-07-18
 

@@ -42,7 +42,7 @@
           <tr class="<%= cycle('odd', 'even') %><%= ' unread' unless notif.viewed? %>">
             <td class="subject">
               <% if notif.issue %>
-                <%= link_to notif.message_text, issue_path(notif.issue) %>
+                <%= link_to notif.message_text, issue_path(notif.issue), feed_item_link_options(notif) %>
               <% else %>
                 <%= notif.message_text %>
               <% end %>

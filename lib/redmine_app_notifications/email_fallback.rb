@@ -29,7 +29,9 @@ module RedmineAppNotifications
       end
 
       cutoff = @now - CUTOFF_AGE
-      rows = AppNotification.unread.where(created_on: ..cutoff).includes(:recipient, :issue, :author).to_a
+      rows = AppNotification.unread.where(created_on: ..cutoff).includes(
+        :recipient, :author, :journal, issue: :project
+      ).to_a
       considered = 0
       sent = 0
 
@@ -38,7 +40,7 @@ module RedmineAppNotifications
         user = notifications.first.recipient
         next unless user && user.id == recipient_id && deliverable_user?(user)
 
-        visible = notifications.select { |notification| notification.recipient_id == user.id && visible_to?(notification, user) }
+        visible = notifications.select { |notification| notification.recipient_id == user.id && notification.visible_to?(user) }
         next if visible.empty?
 
         body = visible.map { |notification| "- #{notification.message_text}" }.join("\n")
@@ -67,15 +69,6 @@ module RedmineAppNotifications
       return false if header_unsafe?(user.mail)
 
       true
-    end
-
-    def visible_to?(notification, user)
-      issue = notification.issue
-      return false unless issue
-
-      issue.visible?(user)
-    rescue StandardError
-      false
     end
 
     def header_unsafe?(value)

@@ -5,14 +5,26 @@ class AppNotificationsController < ApplicationController
   before_action :find_notification, only: %i[mark_read]
 
   def index
-    scope = AppNotification.for_user(User.current).includes(:issue, :author, :journal).recent_first
+    scope = AppNotification.
+      for_user(User.current).
+      visible_to(User.current).
+      includes(:author, :journal, issue: :project).
+      recent_first
     @unread_count = scope.unread.count
     @notifications = scope.limit(50)
   end
 
   def mark_read
+    return unless post_request?
+
     unless @notification.recipient_id == User.current.id
       render_403
+      return
+    end
+
+    # Own row for an issue this user can no longer see: do not confirm it.
+    unless @notification.visible_to?(User.current)
+      render_404
       return
     end
 
@@ -21,7 +33,12 @@ class AppNotificationsController < ApplicationController
   end
 
   def mark_all_read
-    AppNotification.for_user(User.current).unread.update_all(viewed: true)
+    return unless post_request?
+
+    ids = AppNotification.for_user(User.current).visible_to(User.current).unread.pluck(:id)
+    if ids.any?
+      AppNotification.where(id: ids, recipient_id: User.current.id).update_all(viewed: true)
+    end
     redirect_to app_notifications_path, notice: l('redmine_app_notifications.marked_all_read')
   end
 
@@ -39,5 +56,12 @@ class AppNotificationsController < ApplicationController
     return if @notification
 
     render_404
+  end
+
+  def post_request?
+    return true if request.post?
+
+    render_404
+    false
   end
 end

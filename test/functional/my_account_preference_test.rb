@@ -46,6 +46,25 @@ class MyAccountPreferenceTest < Redmine::ControllerTest
     assert User.find(@user.id).app_notification_enabled?
   end
 
+  def test_get_with_preference_param_does_not_change_it
+    get :account, params: { pref: { app_notifications: '0' } }
+    assert_response :success
+    assert User.find(@user.id).app_notification_enabled?
+  end
+
+  def test_post_does_not_change_the_preference
+    post :account, params: {
+      user: account_user_params,
+      pref: { app_notifications: '0' }
+    }
+    assert User.find(@user.id).app_notification_enabled?
+  end
+
+  def test_account_update_does_not_grant_admin
+    put_account('0')
+    assert_not User.find(@user.id).admin?
+  end
+
   def test_invalid_account_update_does_not_change_the_preference
     put :account, params: {
       user: account_user_params.merge(mail: 'not-an-email'),
